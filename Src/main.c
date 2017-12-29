@@ -46,6 +46,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
  PMS7003_ReceiveUART(&pms7003);
 }
 static void PMS7003_Init(void){
+	printf("""");
 	pms7003.uart = &huart2;
 	pms7003.uartNumber = 2;
 	pms7003.countDataToReceive = 1;
