@@ -112,12 +112,17 @@ struct nmeaMessage_t 	nmeaMessage;
 struct dataGps_t 			dataGps;
 struct statusGps_t		statusGps;
 /*________________________________GPS_Prototype_________________________________*/
+void Delete_Char(char s[], int pos);
 int Search_Char(unsigned char Char, char *Str, unsigned char Time, int Len);
+void CLEAR_GPS_RX_Buffer() ;
+int GPS_GetGPRMC();
 unsigned char GPS_DeviceInfo(char* time, char* status, char* latitude, char* S_N, 
 														 char* longitude, char* E_W, char* speed, char* dir, char* date);
+void Scan_for_dots();
 void CLEAR_GPS_RX_Buffer(void);
 void Processing_$GPGRMC(void);
 void Processing_$GPGVTG(void);
+void GPS_USART_RX_ISR();
 /*________________________________GPS_Function__________________________________*/
 // Ham xoa ki tu trong chuoi
 void Delete_Char(char s[], int pos)
@@ -396,7 +401,7 @@ int main(void)
 	PMS7003_Init();
 	//PMS7003_off(&pms7003);
 	//PMS7003_ReceiveStart(&pms7003);
-	HAL_UART_Receive_IT(pms7003.uart, pms7003.uartBuf, pms7003.countDataToReceive);
+	//HAL_UART_Receive_IT(pms7003.uart, pms7003.uartBuf, pms7003.countDataToReceive);
   osThreadDef(myTask01, StartTask01, osPriorityNormal, 0, 128);
   myTask01Handle = osThreadCreate(osThread(myTask01), &myTask01Handle);
 
@@ -407,7 +412,6 @@ int main(void)
 	Longtitude = osMessageCreate(osMessageQ(Longtitude), NULL);
 	
 	Latitude = osMessageCreate(osMessageQ(Latitude), NULL);
-	//HAL_UART_Receive_IT(pms7003.uart, pms7003.uartBuf, pms7003.countDataToReceive);
   /* Start scheduler */
   osKernelStart();
   
@@ -670,6 +674,7 @@ void StartTask02(void const * argument)
   double F_lng, F_lat;
 	osEvent evt;
 	osEvent evt1;
+	HAL_UART_Receive_IT(pms7003.uart, pms7003.uartBuf, pms7003.countDataToReceive);
   for(;;)
   {
 	evt = osMessageGet(Longtitude, 10);
@@ -679,7 +684,6 @@ void StartTask02(void const * argument)
 	  F_lng /= 100000;
 		//printf("Nhan duoc kinh do:%d\n",lng);
 	  printf("Nhan duoc la: %f\r\n",F_lng);
-		printf("\n");
 		}
 
 		evt1 = osMessageGet(Latitude, 10);
@@ -689,8 +693,11 @@ void StartTask02(void const * argument)
 	  F_lat /= 100000;
 		//printf("Nhan duoc vi do: %d\n",lat);
 		printf("Nhan duoc la: %f\r\n",F_lat);
-		printf("\n");
+		printf("PM1.0: %d ",pms7003.pm1p0);
+		printf("PM2.5: %d ",pms7003.pm2p5);
+		printf("PM10: %d\r\n",pms7003.pm10);
 		}
+	
 	
 		osDelay(1000);
   }
